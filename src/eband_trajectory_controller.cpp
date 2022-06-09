@@ -123,6 +123,7 @@ namespace eband_local_planner{
     // diffferential drive parameters
     differential_drive_hack_ = config.differential_drive;
     bubble_velocity_multiplier_ = config.bubble_velocity_multiplier;
+    deceleration_multiplier_ = config.deceleration_multiplier;
     rotation_threshold_multiplier_ = config.rotation_threshold_multiplier;
     disallow_hysteresis_ = config.disallow_hysteresis;
   }
@@ -313,12 +314,11 @@ namespace eband_local_planner{
       double velocity_multiplier = bubble_velocity_multiplier_ * bubble_radius;
 
       double max_vel_lin = max_vel_lin_;
-      if (distance_from_goal < 0.75f) {
-        max_vel_lin = (max_vel_lin < 0.3) ? 0.15 : max_vel_lin / 2;
-      }
 
       double linear_velocity = velocity_multiplier * max_vel_lin;
-      linear_velocity *= cos(bubble_diff.angular.z); //decrease while turning
+      linear_velocity *= cos(bubble_diff.angular.z);  // decrease while turning
+      linear_velocity =
+          min(sqrt(2.0 * acc_max_trans_ * distance_from_goal) * deceleration_multiplier_, linear_velocity);
       if (fabs(linear_velocity) > max_vel_lin_) {
         linear_velocity = forward_sign * max_vel_lin_;
       } else if (fabs(linear_velocity) < min_vel_lin_) {
